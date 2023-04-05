@@ -11,7 +11,7 @@ double left_target, right_target;
 void setup() {
 
   Serial.begin(9600);
-  Serial.println("Hello World");
+  Serial.println("Hello World test");
   
   pinPress_left.set_pins(6, 7, 8, A0);
   pinPress_left.init();
