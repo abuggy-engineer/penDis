@@ -12,9 +12,6 @@ void linAct::init()
   max_pwr = 255; // 8-bit
   max_stroke = 200; // mm
 
-  max_pos = 676;
-  min_pos = 356;
-
   pos = readPos();
   stroke = pos2stroke(pos);
   Serial.print("Initial Position: ");
@@ -289,5 +286,102 @@ void linAct::set_pins(int ena, int in1, int in2, int pot)
   POT = pot; // the Arduino pin connected to the potentiometer of the actuator
 }
 
+void linAct::dualControl(linAct l1, linAct l2, double left, double right)
+{
 
+  int tolerance = 1;
+
+  if(left == 222 || right == 222)
+  {
+    l1.move(-l1.max_pwr);
+    l2.move(-l2.max_pwr);
+    return;
+  }
+  else if(left == 333 || right == 333)
+  {
+    l1.move(l1.max_pwr);
+    l2.move(l2.max_pwr);
+    return;
+  }
+  else if(left == 555 || right == 555)
+  {
+    Serial.print("L ");
+    l1.printPos();
+    Serial.print("R ");
+    l2.printPos();
+    return;
+  }
+
+  //Limit Target Values
+  if(left > 200)
+    left = 200;
+  else if(left < 0)
+    left = 0;
+
+  if(right > 200)
+    right = 200;
+  else if(right < 0)
+    right = 0;
+
+  //Convert target to position
+  int left_pos = l1.stroke2pos(left);
+  int righ_pos = l1.stroke2pos(right);
+
+  //Read Position
+  l1.pos = l1.readPos();
+  l2.pos = l2.readPos();
+
+  //Error
+  int e_left = left_pos - l1.pos;
+  int e_righ = righ_pos - l2.pos;
+
+  Serial.println("Left \tRight");
+
+  while(abs(e_left) > tolerance || abs(e_righ) > tolerance)
+  {
+    if(e_left > 0)
+    {
+      l1.move(l1.max_pwr);
+    }
+    else if(e_left < 0)
+      l1.move(-l1.max_pwr);
+
+    if(e_righ > 0)
+    {
+      l2.move(l2.max_pwr);
+    }
+    else if(e_righ < 0)
+      l2.move(-l2.max_pwr);
+
+    l1.pos = l1.readPos();
+    l2.pos = l2.readPos();
+
+    e_left = left_pos - l1.pos;
+    e_righ = righ_pos - l2.pos;
+
+    //Serial.print(l1.pos);
+    //Serial.print("\t");
+    //Serial.println(l2.pos);
+  }
+
+  l1.stop();
+  l2.stop();
+
+  Serial.print("L ");
+  l1.printPos();
+  Serial.print("R ");
+  l2.printPos();
+
+}
+
+void linAct::printPos()
+{
+  pos = readPos();
+  stroke = pos2stroke(pos);
+
+  Serial.print("Position: ");
+  Serial.print(pos);
+  Serial.print(" Stroke: ");
+  Serial.println(stroke);
+}
 

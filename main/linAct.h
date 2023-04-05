@@ -3,7 +3,6 @@ class linAct
   private:
 
     int max_pwr;
-    int max_pos, min_pos;
     float max_stroke;
 
   public:
@@ -14,6 +13,7 @@ class linAct
     char POT   ;//A0 // the Arduino pin connected to the potentiometer of the actuator
 
     int pos;
+    int max_pos, min_pos;
     float stroke, vel;
 
     void init();
@@ -27,5 +27,7 @@ class linAct
     int stroke2pos(double dist);
     void go2pos(float target); //input is in mm
     void set_pins(int ena, int in1, int in2, int pot);
+    void dualControl(linAct, linAct, double left, double right);
+    void printPos();
     
 };
