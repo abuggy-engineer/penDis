@@ -12,14 +12,8 @@ void linAct::init()
   max_pwr = 255; // 8-bit
   max_stroke = 200; // mm
 
-  error_prev = 0;
-  integral_pos = 0;
-  kp = 1.25;//0.9;
-  ki = 0.0;
-  kd = 0;//0.02;
-
   max_pos = 676;
-  min_pos = 357;
+  min_pos = 356;
 
   pos = readPos();
   stroke = pos2stroke(pos);
@@ -287,82 +281,13 @@ void linAct::go2pos(float target)
 }
 */
 
-/*
-void linAct::calcVel() 
+void linAct::set_pins(int ena, int in1, int in2, int pot)
 {
-
-  if(!t0)
-  {
-    t0 = millis();
-    x0 = stroke;
-  }
-  else
-  {
-    t1 = millis();
-    x1 = stroke;
-
-    int dt = t1 - t0; //ms
-
-    Serial.print("x0: ");
-    Serial.print(x0);
-    Serial.print(" x1: ");
-    Serial.print(x1);
-    Serial.print(" dt: ");
-    Serial.print(dt);
-
-    if(x1 != x0)
-    {
-      float dx = x1 - x0; //mm
-      vel = 1000*dx/dt; // mm/s
-     
-      Serial.print(" dx: ");
-      Serial.print(dx);
-      Serial.print(" vel: ");
-      Serial.println(vel);
-
-      t0 = t1;
-      x0 = x1;
-    }
-    else
-      Serial.println();
-  }
-}
-*/
-
-
-void linAct::calcVel() 
-{
-  for(int i = 9; i > 0; i--)
-  {
-    timeArray[i] = timeArray[i-1];
-    positionArray[i] = positionArray[i-1];
-  }
-
-  timeArray[0] = millis();
-  positionArray[0] = stroke;
-
-  double dx = positionArray[0] - positionArray[9];
-  unsigned int dt = timeArray[0] - timeArray[9];
-
-  vel = 1000*dx/dt;
-
-  Serial.print(" dt: ");
-  Serial.print(dt);
-  Serial.print(" dx: ");
-  Serial.print(dx);
-  Serial.print(" vel: ");
-  Serial.println(vel);
-
+  ENA_PIN = ena; // Speed/Power to Motor
+  IN1_PIN = in1; // Polarity of Voltage ==> Direction (Fwd)
+  IN2_PIN = in2; // Polarity of Voltage ==> Direction (Rev)
+  POT = pot; // the Arduino pin connected to the potentiometer of the actuator
 }
 
-double linAct::average(double array[], int size)
-{
-  double sum = 0;
-  for(int i = 0; i < size; i++)
-  {
-    sum += array[i];
-  }
 
-  return sum/size;
-}
 
