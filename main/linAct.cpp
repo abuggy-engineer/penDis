@@ -76,6 +76,7 @@ void linAct::move(float pwr)
 unsigned int linAct::readPos()
 {
   pos = analogRead(POT);
+  stroke = pos2stroke(pos);
 
   return pos;
 }
@@ -145,14 +146,8 @@ void linAct::calibrate()
 }
 
 double linAct::pos2stroke(int position)
-{
-
-  //stroke = map(position, min_pos, max_pos, 0, max_stroke);
-  	
-  double ratio = (position - min_pos)/(max_pos - min_pos);
-  
+{ 
   stroke = max_stroke*(position - min_pos)/(max_pos - min_pos);
-
   return stroke;
 }
 
@@ -322,10 +317,13 @@ void linAct::dualControl(linAct l1, linAct l2, double left, double right)
     right = 200;
   else if(right < 0)
     right = 0;
-
   //Convert target to position
   int left_pos = l1.stroke2pos(left);
   int righ_pos = l1.stroke2pos(right);
+
+  Serial.print(left_pos);
+  Serial.print(" Target ");
+  Serial.println(righ_pos);
 
   //Read Position
   l1.pos = l1.readPos();
@@ -339,29 +337,38 @@ void linAct::dualControl(linAct l1, linAct l2, double left, double right)
 
   while(abs(e_left) > tolerance || abs(e_righ) > tolerance)
   {
-    if(e_left > 0)
+    if(abs(e_left) < tolerance)
+      l1.stop();
+    else if(e_left > 0)
     {
       l1.move(l1.max_pwr);
+      l1.pos = l1.readPos();
     }
     else if(e_left < 0)
+    {
       l1.move(-l1.max_pwr);
+      l1.pos = l1.readPos();
+    }
 
-    if(e_righ > 0)
+    if(abs(e_righ) < tolerance)
+      l2.stop();
+    else if(e_righ > 0)
     {
       l2.move(l2.max_pwr);
+      l2.pos = l2.readPos();
     }
     else if(e_righ < 0)
+    {
       l2.move(-l2.max_pwr);
-
-    l1.pos = l1.readPos();
-    l2.pos = l2.readPos();
+      l2.pos = l2.readPos();
+    }
 
     e_left = left_pos - l1.pos;
     e_righ = righ_pos - l2.pos;
 
-    //Serial.print(l1.pos);
-    //Serial.print("\t");
-    //Serial.println(l2.pos);
+    Serial.print(l1.pos);
+    Serial.print("\t");
+    Serial.println(l2.pos);
   }
 
   l1.stop();
