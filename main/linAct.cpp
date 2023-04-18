@@ -12,8 +12,9 @@ void linAct::init()
   max_pwr = 255; // 8-bit
   max_stroke = 200; // mm
 
-  pos = readPos();
-  stroke = pos2stroke(pos);
+  pot_smoothing_init();
+  //pos = readPos();
+
   Serial.print("Initial Position: ");
   Serial.println(stroke);
 }
@@ -24,8 +25,6 @@ void linAct::extend(float pwr)
   digitalWrite(IN2_PIN, HIGH);
 
   analogWrite(ENA_PIN, pwr);
-
-  //Serial.println("Extend");
 }
 
 void linAct::retract(float pwr)
@@ -148,13 +147,14 @@ void linAct::calibrate()
 double linAct::pos2stroke(int position)
 { 
   stroke = max_stroke*(position - min_pos)/(max_pos - min_pos);
+  //Serial.println(stroke);  
   return stroke;
 }
 
 int linAct::stroke2pos(double dist)
 {
-  pos = map(dist, 0, max_stroke, min_pos, max_pos);
-
+  pos = ( (dist - 0)*(max_pos - min_pos)/(max_stroke - 0) ) + min_pos;
+  //Serial.println(pos);  
   return pos;
 }
 
@@ -167,9 +167,10 @@ void linAct::go2pos(float target)
     
   int target_pos = stroke2pos(target);
 
-  pos = readPos();
+  //pos = readPos();
+  pot_smoothing();
 
-  int error = target_pos - pos;
+  int error = target_pos - pos_av;//stroke;//pos;
 
   int tolerance = 1;
 
@@ -177,65 +178,81 @@ void linAct::go2pos(float target)
   {
     Serial.print("error:");
     Serial.print(error);
-    Serial.print(",");
+    Serial.print(",");//////////////////////
     if(error > 0)
-    {
       move(max_pwr);
-      Serial.print("-FWD-");
-    }
     else if(error < 0)
       move(-max_pwr);
 
-    pos = readPos();
-    error = target_pos - pos;
+    pos = readPos();//pot_smoothing();//pos = readPos();
+    error = target_pos - pos;//pos_av;//stroke;//pos;
 
-    Serial.print("Target:");
+    Serial.print("Target:");///////////
     Serial.print(target_pos);
     Serial.print(",");
     Serial.print("Pos:");
     Serial.println(pos);
+  
   }
   stop();
 
+  /////////////////////////////////////////////////////////////////
+  pot_smoothing_init();
+  Serial.print("************************************Pos av: ");
+  Serial.println(pos_av);
+  pos = pos_av;
+  
+  while(pos_av != target_pos)
+  {
+    error = target_pos - pos;
+
+    while(abs(error) >= tolerance)
+    {
+      Serial.print("error:");
+      Serial.print(error);
+      Serial.print(",");//////////////////////
+      if(error > 0)
+        move(0.5*max_pwr);
+      else if(error < 0)
+        move(-0.5*max_pwr);
+
+      pos = readPos();//pot_smoothing();//pos = readPos();
+      error = target_pos - pos;//pos_av;//stroke;//pos;
+
+      Serial.print("Target:");///////////
+      Serial.print(target_pos);
+      Serial.print(",");
+      Serial.print("Pos:");
+      Serial.println(pos);    
+    }
+    stop();
+    pot_smoothing_init();
+    Serial.print("************************************Pos av: ");
+    Serial.println(pos_av);
+    pos = pos_av;
+  }
+
+  /////////////////////////////////////////////////////////////////
   Serial.print("Target:");
   Serial.print(target_pos);
   Serial.print(",");
   Serial.print(target);
   Serial.print(" -- Actual:");
-  Serial.print(pos);
+  Serial.print(pos_av);
   Serial.print(",");
-  Serial.println(pos2stroke(pos));
+  Serial.println(pos2stroke(pos_av));
 }
 
 /*
 void linAct::go2pos(float target)
 { 
   float tolerance = 0.32;
-  float output_signal = 0;
-
+  
   int x = readPos();
   double curr = pos2stroke(x);
 
-  while( (target <= curr - tolerance || target >= curr + tolerance) || abs(output_signal) > 80)
+  while( (target <= curr - tolerance || target >= curr + tolerance) )
   {
-  /*
-    float error = target - curr;
-    float dedt = error - error_prev;
-    integral_pos += error; 
-    output_signal = kp*error + ki*integral_pos + kd*dedt;
-
-    if(abs(output_signal) < 0.3*max_pwr)
-    {
-      if(output_signal > 0)
-        output_signal = 0.3*max_pwr;
-      else
-        output_signal = -0.3*max_pwr;
-    }
-
-    move(output_signal);
-
-    error_prev = error;
-  
 
     //
   	float error = target - curr;
@@ -390,5 +407,49 @@ void linAct::printPos()
   Serial.print(pos);
   Serial.print(" Stroke: ");
   Serial.println(stroke);
+}
+
+void linAct::pot_smoothing()
+{
+  int sum = 0;
+
+  //moving the values on by 1, making space for new value, getting all but new val summed
+  for(int i = 8; i >= 0; i--)
+  {
+    pot_vals[i+1] = pot_vals[i];
+
+    if(i <= 8)
+      sum += pot_vals[i+1];
+  }
+
+  //record new value, add to sum
+  pot_vals[0] = readPos();
+  sum += pot_vals[0];
+
+  pos_av = sum/10;
+
+  //print data
+  /*
+  for(int i = 0; i < 10; i++)
+  {
+    Serial.print(pot_vals[i]);
+    Serial.print(" ");
+  }
+  Serial.print("--> ");
+  Serial.println(pos_av);
+  */
+}
+
+void linAct::pot_smoothing_init()
+{
+  int sum = 0;
+  for(int i = 9; i >= 0; i--)
+  {
+    pot_vals[i] = readPos();
+    sum += pot_vals[i];
+    Serial.println(pot_vals[i]);
+  }
+  pos_av = sum/10;
+  Serial.println(pos_av);
 }
 

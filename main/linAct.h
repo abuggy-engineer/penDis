@@ -5,6 +5,9 @@ class linAct
     int max_pwr;
     float max_stroke;
 
+    int pot_vals[10]; 
+    int pos_av;
+
   public:
 
     char ENA_PIN   ;//6 // Speed/Power to Motor
@@ -29,5 +32,7 @@ class linAct
     void set_pins(int ena, int in1, int in2, int pot);
     void dualControl(linAct, linAct, double left, double right);
     void printPos();
+    void pot_smoothing();
+    void pot_smoothing_init();
     
 };

@@ -4,6 +4,7 @@
 linAct pinPress;
 linAct pinPress_left;
 linAct pinPress_right;
+linAct capRem;
 
 int counter = 0;
 
@@ -18,30 +19,40 @@ void setup() {
   
   pinPress_right.set_pins(13, 12, 11, A1);
 
+  capRem.set_pins(A3, 6, 5, A2);
+
   pinPress_left.max_pos = 675;
   pinPress_left.min_pos = 355;
   pinPress_right.max_pos = 676;
   pinPress_right.min_pos = 352;
-  //pinPress_right.calibrate();
+  pinPress_right.max_pos = 675;
+  pinPress_right.min_pos = 348;
+  capRem.max_pos = 674;
+  capRem.min_pos = 349;
 
-  pinPress_left.init();
-  pinPress_right.init();
+  //pinPress_left.init();
+  //pinPress_right.init();
+  capRem.init();
 
+  //capRem.calibrate();
+  capRem.move(-255);
 }
 
 void loop() 
 {
-
+  capRem.pot_smoothing();
+  
   Serial.print("Target Left Pos: ");
   while(!Serial.available()){}
   double response_left = Serial.parseInt();
   Serial.println(response_left);
 
-  Serial.print("Target Right Pos: ");
-  while(!Serial.available()){}
-  double response_righ = Serial.parseInt();
-  Serial.println(response_righ);
-
-  pinPress.dualControl(pinPress_left, pinPress_right, response_left, response_righ);
-  
+  if(response_left == 555)
+  {
+    capRem.pot_smoothing_init();
+  }
+  else
+  {
+    capRem.go2pos(response_left);    
+  } 
 }
