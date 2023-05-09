@@ -82,65 +82,13 @@ unsigned int linAct::readPos()
 
 void linAct::calibrate()
 {
-  move(max_pwr);
-  Serial.print("Extending - ");
-  int counter = 0;
-  int prev = 9999;
-  int curr = readPos();
+  max_pos = 4095;
 
-  while (curr != prev || counter < 20)
-  {
-    //delay(1000);
-    prev = curr;
-    curr = readPos();
-    Serial.print("Counter: ");
-    Serial.print(counter);
-    Serial.print(" Pos: ");
-    Serial.println(curr);
-    if (curr == prev)
-    {
-      counter++;
-    }
-    else
-      counter = 0;
-  }
-  max_pos = readPos();
-  Serial.print("Max Pos: ");
-  Serial.println(max_pos);
-  Serial.print("Stroke: ");
-  Serial.println(pos2stroke(max_pos));
-
-  stop();
-  delay(1000);
-
-  move(-max_pwr);
-  delay(50);
-  Serial.print("Retracting- ");
-  counter = 0;
-  prev = 9999;
-  while (curr != prev || counter < 20)
-  {
-    //delay(1000);
-    prev = curr;
-    curr = readPos();
-    Serial.print("Counter: ");
-    Serial.print(counter);
-    Serial.print(" Pos: ");
-    Serial.println(curr);
-    if (curr == prev)
-    {
-      counter++;
-    }
-    else 
-      counter = 0;
-  }
-  min_pos = readPos();
-  Serial.print("Min Pos: ");
+  move(-255);
+  delay(1000*100 / 8);
+  pot_smoothing_init();
+  Serial.print("Min Position: ");
   Serial.println(min_pos);
-  Serial.print("Stroke: ");
-  Serial.println(pos2stroke(min_pos));
-
-  stop();
 
 }
 
@@ -176,9 +124,9 @@ void linAct::go2pos(float target)
 
   while(abs(error) >= tolerance)
   {
-    Serial.print("error:");
-    Serial.print(error);
-    Serial.print(",");//////////////////////
+    //Serial.print("error:");
+    //Serial.print(error);
+    //Serial.print(",");//////////////////////
     if(error > 0)
       move(max_pwr);
     else if(error < 0)
@@ -187,19 +135,21 @@ void linAct::go2pos(float target)
     pos = readPos();//pot_smoothing();//pos = readPos();
     error = target_pos - pos;//pos_av;//stroke;//pos;
 
+    /*
     Serial.print("Target:");///////////
     Serial.print(target_pos);
     Serial.print(",");
     Serial.print("Pos:");
     Serial.println(pos);
+    */
   
   }
   stop();
 
   /////////////////////////////////////////////////////////////////
   //pot_smoothing_init();
-  Serial.print("************************************Pos av: ");
-  Serial.println(pos_av);
+  //Serial.print("************************************Pos av: ");
+  //Serial.println(pos_av);
   pos = pos_av;
   /*
   while(pos_av != target_pos)
@@ -444,14 +394,14 @@ void linAct::pot_smoothing()
 void linAct::pot_smoothing_init()
 {
   int sum = 0;
-  for(int i = 9; i >= 0; i--)
+  for(int i = 99; i >= 0; i--)
   {
     pot_vals[i] = readPos();
     sum += pot_vals[i];
-    Serial.println(pot_vals[i]);
+    //Serial.println(pot_vals[i]);
   }
-  pos_av = sum/10;
-  Serial.println(pos_av);
+  pos_av = sum/100;
+  //Serial.println(pos_av);
 
   min_pos = pos_av;
 }
