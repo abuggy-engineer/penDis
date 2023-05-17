@@ -2,8 +2,10 @@ class linAct
 {
   private:
 
-    int max_pwr;
     float max_stroke;
+
+    int pot_vals[10]; 
+    int pos_av;
 
   public:
 
@@ -12,6 +14,7 @@ class linAct
     char IN2_PIN   ;//8 // Polarity of Voltage ==> Direction (Rev)
     char POT   ;//A0 // the Arduino pin connected to the potentiometer of the actuator
 
+    int max_pwr;
     int pos;
     int max_pos, min_pos;
     float stroke, vel;
@@ -29,5 +32,7 @@ class linAct
     void set_pins(int ena, int in1, int in2, int pot);
     void dualControl(linAct, linAct, double left, double right);
     void printPos();
+    void pot_smoothing();
+    void pot_smoothing_init();
     
 };
