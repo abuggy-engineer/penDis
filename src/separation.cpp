@@ -143,12 +143,12 @@ void separation::pinPress_limit()
             ppR.stop();
             ppStatus_right = HIGH;
         }
-        /*
+        
         Serial.print(l);
         Serial.print("\t");
         Serial.print(r);
         Serial.print("\n");
-        */
+        
 
         delay(50);
     }

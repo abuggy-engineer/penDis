@@ -4,7 +4,7 @@ class separation
 {
     private:
 
-        #define PPR_LIMIT 13
+        #define PPR_LIMIT 27
         #define PPL_LIMIT 14
 
         bool ppStatus_right = 0;
