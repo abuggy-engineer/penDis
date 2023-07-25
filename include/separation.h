@@ -4,13 +4,13 @@ class separation
 {
     private:
 
-        #define PPR_LIMIT 27
-        #define PPL_LIMIT 14
-
         bool ppStatus_right = 0;
         bool ppStatus_left = 0;
 
     public:
+
+        #define PPR_LIMIT 27
+        #define PPL_LIMIT 13
 
         linAct vertWedge;
         linAct ppL;
@@ -23,6 +23,6 @@ class separation
         void pp_limit_right();
         void pp_limit_left();
         void print_stroke();
-        void test_act(linAct);
+        void test_act(linAct l1);
         
 };
